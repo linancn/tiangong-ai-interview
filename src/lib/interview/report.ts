@@ -12,6 +12,7 @@ type TranscriptMessage = {
 
 type RenderReportInput = {
   roleName: string;
+  companyName?: string | null;
   candidateName?: string | null;
   rubric: RubricDimension[];
   reportState: ReportState;
@@ -133,6 +134,12 @@ function summarizeTranscript(transcript: TranscriptMessage[]) {
 
 export function renderMarkdownReport(input: RenderReportInput) {
   const average = averageScore(input.reportState);
+  const headerLines = [
+    input.companyName ? `公司或团队：${input.companyName}` : null,
+    `候选人：${input.candidateName || "未填写"}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
   const scoreRows = input.rubric
     .map((dimension) => {
       const score = input.reportState.scores[dimension.id];
@@ -162,7 +169,7 @@ export function renderMarkdownReport(input: RenderReportInput) {
 
   return `# 面试报告：${input.roleName}
 
-候选人：${input.candidateName || "未填写"}
+${headerLines}
 
 ## 一、总体结论
 

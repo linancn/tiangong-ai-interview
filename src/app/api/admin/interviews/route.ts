@@ -12,6 +12,8 @@ import { candidateInterviewUrl } from "@/lib/server/request-url";
 
 const CreateInterviewSchema = z.object({
   title: z.string().min(1),
+  companyName: z.string().optional(),
+  companyContext: z.string().optional(),
   roleName: z.string().min(1),
   jd: z.string().optional(),
   goalsText: z.string().optional(),
@@ -53,6 +55,8 @@ export async function POST(req: Request) {
     const payload = CreateInterviewSchema.parse(await req.json());
     const { session, interview, report } = await createInterviewWithSession({
       title: payload.title,
+      companyName: payload.companyName,
+      companyContext: payload.companyContext,
       roleName: payload.roleName,
       jd: payload.jd,
       goals: linesToGoals(payload.goalsText ?? ""),

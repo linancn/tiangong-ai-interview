@@ -56,17 +56,51 @@ export function InterviewForm() {
         <form action={onSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="title">面试名称</Label>
-            <Input id="title" name="title" required placeholder="后端工程师一面" />
+            <Input
+              id="title"
+              name="title"
+              required
+              placeholder="销售经理二面 / 财务 BP 初面 / 校招生综合面"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="companyName">公司或团队</Label>
+            <Input
+              id="companyName"
+              name="companyName"
+              placeholder="公司名称、事业部或团队名称"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="companyContext">公司和岗位背景</Label>
+            <Textarea
+              id="companyContext"
+              name="companyContext"
+              rows={4}
+              placeholder="行业、产品、客户类型、团队阶段、文化要求、该岗位面对的业务场景"
+            />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="roleName">岗位名称</Label>
-            <Input id="roleName" name="roleName" required placeholder="高级后端工程师" />
+            <Input
+              id="roleName"
+              name="roleName"
+              required
+              placeholder="客户成功经理 / 财务分析师 / 产品运营 / 护士长"
+            />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="jd">JD</Label>
-            <Textarea id="jd" name="jd" rows={5} placeholder="岗位职责、技术栈、业务背景" />
+            <Textarea
+              id="jd"
+              name="jd"
+              rows={5}
+              placeholder="岗位职责、任职要求、关键产出、协作对象、业务约束"
+            />
           </div>
 
           <div className="grid gap-2">
@@ -75,7 +109,7 @@ export function InterviewForm() {
               id="goalsText"
               name="goalsText"
               rows={4}
-              placeholder={"每行一个目标\n验证系统设计能力\n验证线上问题复盘能力"}
+              placeholder={"每行一个目标\n验证候选人是否做过相似业务场景\n验证关键职责的判断和推进能力\n验证与公司文化和团队阶段的匹配"}
             />
           </div>
 
@@ -85,7 +119,7 @@ export function InterviewForm() {
               id="rubricText"
               name="rubricText"
               rows={5}
-              placeholder={"每行一个维度，可用冒号补充说明\n技术深度：关键技术、边界条件、故障处理\n沟通表达：事实、取舍、结果"}
+              placeholder={"每行一个维度，可用冒号补充说明\n岗位匹配度：经历、职责范围、成果证据\n专业判断：场景分析、取舍、风险意识\n执行与负责：推进方式、结果指标、复盘\n沟通表达：事实、对象、影响"}
             />
           </div>
 
@@ -114,7 +148,7 @@ export function InterviewForm() {
               id="candidateResume"
               name="candidateResume"
               rows={4}
-              placeholder="可选，粘贴候选人简历重点"
+              placeholder="可选，粘贴候选人简历、作品集、业绩、证书或过往职责重点"
             />
           </div>
 

@@ -19,6 +19,8 @@ import type {
 export const interviews = pgTable("interviews", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
+  companyName: text("company_name"),
+  companyContext: text("company_context"),
   roleName: text("role_name").notNull(),
   jd: text("jd"),
   goals: jsonb("goals").$type<string[]>().notNull(),

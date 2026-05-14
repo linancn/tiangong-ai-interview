@@ -111,10 +111,14 @@ export async function POST(req: Request) {
     model,
     schema: EvalSchema,
     system: buildEvaluatorPrompt({
+      roleName: bundle.interview.roleName,
+      companyName: bundle.interview.companyName,
+      companyContext: bundle.interview.companyContext,
       jd: bundle.interview.jd,
       goals: bundle.interview.goals,
       rubric: bundle.interview.rubric,
       reportState: bundle.reportState,
+      candidateResume: bundle.session.candidateResume,
     }),
     prompt: `最近对话：\n${transcriptForPrompt(savedMessages)}\n\n候选人最新回答：\n${latestUserText}`,
   });
@@ -136,6 +140,7 @@ export async function POST(req: Request) {
     };
     const finalMarkdown = renderMarkdownReport({
       roleName: bundle.interview.roleName,
+      companyName: bundle.interview.companyName,
       candidateName: bundle.session.candidateName,
       rubric: bundle.interview.rubric,
       reportState: finalReportState,
@@ -156,11 +161,15 @@ export async function POST(req: Request) {
   const result = streamText({
     model,
     system: `${buildInterviewerPrompt({
+      roleName: bundle.interview.roleName,
+      companyName: bundle.interview.companyName,
+      companyContext: bundle.interview.companyContext,
       jd: bundle.interview.jd,
       goals: bundle.interview.goals,
       rubric: bundle.interview.rubric,
       reportState: nextReportState,
       nextFocus: evalResult.object.nextFocus,
+      candidateResume: bundle.session.candidateResume,
     })}\n\n最近对话：\n${transcriptForPrompt(savedMessages)}`,
     messages: await convertToModelMessages(messages),
     onFinish: async ({ text, usage, finishReason }) => {

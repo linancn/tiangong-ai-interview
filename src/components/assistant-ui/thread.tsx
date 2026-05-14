@@ -92,7 +92,7 @@ const ThreadWelcome: FC = () => {
             面试开始
           </h1>
           <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-muted-foreground text-xl delay-75 duration-200">
-            请先介绍一段最能代表你能力的项目经历。
+            请先介绍一段最能代表你岗位匹配度的工作、项目或实践经历。
           </p>
         </div>
       </div>

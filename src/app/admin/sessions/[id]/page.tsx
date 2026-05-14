@@ -35,6 +35,7 @@ export default async function SessionDetailPage({ params }: PageProps) {
     bundle.report.finalMarkdown ??
     renderMarkdownReport({
       roleName: bundle.interview.roleName,
+      companyName: bundle.interview.companyName,
       candidateName: bundle.session.candidateName,
       rubric: bundle.interview.rubric,
       reportState: bundle.reportState,
@@ -67,6 +68,18 @@ export default async function SessionDetailPage({ params }: PageProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <div>
+                <p className="text-muted-foreground">公司或团队</p>
+                <p className="font-medium">
+                  {bundle.interview.companyName || "未填写"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">背景</p>
+                <p className="whitespace-pre-wrap">
+                  {bundle.interview.companyContext || "未填写"}
+                </p>
+              </div>
               <div>
                 <p className="text-muted-foreground">候选人</p>
                 <p className="font-medium">

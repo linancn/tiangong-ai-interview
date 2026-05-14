@@ -19,6 +19,8 @@ import {
 
 export type CreateInterviewInput = {
   title: string;
+  companyName?: string;
+  companyContext?: string;
   roleName: string;
   jd?: string;
   goals: string[];
@@ -73,6 +75,8 @@ export async function createInterviewWithSession(input: CreateInterviewInput) {
     .insert(interviews)
     .values({
       title: input.title,
+      companyName: input.companyName || null,
+      companyContext: input.companyContext || null,
       roleName: input.roleName,
       jd: input.jd || null,
       goals: input.goals,

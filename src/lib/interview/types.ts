@@ -42,19 +42,24 @@ export type MessageRole = "user" | "assistant" | "system";
 
 export const DEFAULT_RUBRIC: RubricDimension[] = [
   {
-    id: "technical_depth",
-    name: "技术深度",
-    description: "能解释关键技术选择、边界条件和线上问题处理。",
+    id: "role_fit",
+    name: "岗位匹配度",
+    description: "过往经历、职责范围和成果证据与目标岗位的匹配程度。",
   },
   {
-    id: "problem_solving",
-    name: "问题拆解",
-    description: "能把开放问题拆成可验证的假设和执行步骤。",
+    id: "domain_judgment",
+    name: "专业判断",
+    description: "能结合岗位场景做出合理判断、取舍和风险识别。",
+  },
+  {
+    id: "execution_ownership",
+    name: "执行与负责",
+    description: "能说明如何推进任务、衡量结果、复盘问题并承担责任。",
   },
   {
     id: "communication",
     name: "沟通表达",
-    description: "表达清晰，能给出事实、取舍和结果。",
+    description: "表达清晰，能给出事实、背景、行动和结果，并适配协作对象。",
   },
 ];
 

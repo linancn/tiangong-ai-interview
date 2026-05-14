@@ -28,6 +28,7 @@ export async function GET(_req: Request, { params }: Params) {
       bundle.report.finalMarkdown ??
       renderMarkdownReport({
         roleName: bundle.interview.roleName,
+        companyName: bundle.interview.companyName,
         candidateName: bundle.session.candidateName,
         rubric: bundle.interview.rubric,
         reportState: bundle.reportState,

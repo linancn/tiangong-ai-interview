@@ -91,7 +91,9 @@ export default async function AdminPage() {
                               {interview.roleName}
                             </div>
                             <div className="text-muted-foreground text-xs">
-                              {interview.title}
+                              {[interview.companyName, interview.title]
+                                .filter(Boolean)
+                                .join(" / ")}
                             </div>
                           </TableCell>
                           <TableCell>
