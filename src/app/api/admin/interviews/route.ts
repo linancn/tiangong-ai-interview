@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdminApiAuth } from "@/lib/server/admin-auth";
 import {
   createInterviewWithSession,
+  deleteInterviewBySessionId,
   linesToGoals,
   linesToRubric,
   listAdminSessions,
@@ -21,6 +22,10 @@ const CreateInterviewSchema = z.object({
   maxTurns: z.coerce.number().int().min(1).max(30).default(10),
   candidateName: z.string().optional(),
   candidateResume: z.string().optional(),
+});
+
+const DeleteInterviewSchema = z.object({
+  sessionId: z.string().uuid(),
 });
 
 export async function GET() {
@@ -77,6 +82,33 @@ export async function POST(req: Request) {
       {
         error:
           error instanceof Error ? error.message : "Failed to create interview.",
+      },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const authError = await requireAdminApiAuth();
+    if (authError) return authError;
+
+    const payload = DeleteInterviewSchema.parse(await req.json());
+    const deleted = await deleteInterviewBySessionId(payload.sessionId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Interview session not found." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to delete interview.",
       },
       { status: 400 },
     );

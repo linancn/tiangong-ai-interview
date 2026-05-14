@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertCircleIcon, ExternalLinkIcon } from "lucide-react";
 
+import { DeleteSessionButton } from "@/components/admin/delete-session-button";
 import { InterviewForm } from "@/components/admin/interview-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,16 +116,24 @@ export default async function AdminPage() {
                           <TableCell>
                             {session.turnCount} / {interview.maxTurns}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              nativeButton={false}
-                              render={<Link href={`/admin/sessions/${session.id}`} />}
-                            >
-                              查看
-                              <ExternalLinkIcon className="size-3.5" />
-                            </Button>
+                          <TableCell>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                nativeButton={false}
+                                render={<Link href={`/admin/sessions/${session.id}`} />}
+                              >
+                                查看
+                                <ExternalLinkIcon className="size-3.5" />
+                              </Button>
+                              <DeleteSessionButton
+                                sessionId={session.id}
+                                label={`${interview.roleName} - ${
+                                  session.candidateName || "未填写"
+                                }`}
+                              />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))

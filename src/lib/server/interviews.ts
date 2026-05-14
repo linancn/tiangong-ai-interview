@@ -171,6 +171,19 @@ export async function listAdminSessions() {
     .orderBy(desc(interviewSessions.createdAt));
 }
 
+export async function deleteInterviewBySessionId(sessionId: string) {
+  const db = getDb();
+  const [session] = await db
+    .select({ interviewId: interviewSessions.interviewId })
+    .from(interviewSessions)
+    .where(eq(interviewSessions.id, sessionId));
+
+  if (!session) return false;
+
+  await db.delete(interviews).where(eq(interviews.id, session.interviewId));
+  return true;
+}
+
 export async function listSessionMessages(sessionId: string) {
   const db = getDb();
   return db

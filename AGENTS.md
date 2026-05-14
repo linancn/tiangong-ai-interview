@@ -215,6 +215,12 @@ UI 改动后用 Playwright 看真实页面，不只靠静态代码判断。优�
 - 请求字段：`title`、`roleName`、`jd`、`goalsText`、`rubricText`、`maxTurns`、`candidateName`、`candidateResume`。
 - 响应包含 `candidateUrl`，由 `candidateInterviewUrl()` 生成。
 
+`DELETE /api/admin/interviews`
+
+- 需要管理员登录。
+- 请求字段：`sessionId`。
+- 会删除该 session 对应的 interview，并通过数据库 cascade 删除候选人会话、完整消息和报告。
+
 `POST /api/chat?token=...`
 
 - 候选人公开接口。
