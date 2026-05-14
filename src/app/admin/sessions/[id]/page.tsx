@@ -41,7 +41,7 @@ export default async function SessionDetailPage({ params }: PageProps) {
     <main className="min-h-screen bg-muted/20">
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[360px_1fr]">
         <aside className="space-y-4">
-          <Button variant="outline" render={<Link href="/admin" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/admin" />}>
             返回管理页
           </Button>
 
@@ -92,6 +92,7 @@ export default async function SessionDetailPage({ params }: PageProps) {
               <Button
                 variant="outline"
                 className="w-full"
+                nativeButton={false}
                 render={<a href={`/api/report/${bundle.session.id}`} />}
               >
                 <DownloadIcon className="size-4" />

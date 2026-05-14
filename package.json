@@ -4,9 +4,9 @@
   "private": true,
   "packageManager": "pnpm@11.1.1",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0 -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0 -p 3001",
     "lint": "eslint",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",

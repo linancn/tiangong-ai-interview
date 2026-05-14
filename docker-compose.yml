@@ -28,11 +28,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: 3001
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgres://tiangong:tiangong_password@postgres:5432/tiangong_interview
     ports:
-      - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./config.toml:/app/config.toml:ro
 

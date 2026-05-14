@@ -20,7 +20,7 @@ pnpm dev
 当前服务会自动选择可用端口。管理页入口：
 
 ```text
-http://localhost:3000/admin
+http://localhost:3001/admin
 ```
 
 ## 配置
@@ -58,7 +58,7 @@ pnpm docker:up
 访问：
 
 ```text
-http://localhost:3000/admin
+http://localhost:3001/admin
 ```
 
 查看日志：

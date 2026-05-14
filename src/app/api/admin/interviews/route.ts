@@ -54,7 +54,8 @@ export async function POST(req: Request) {
       candidateResume: payload.candidateResume,
     });
 
-    const origin = req.headers.get("origin") ?? new URL(req.url).origin;
+    const requestOrigin = req.headers.get("origin") ?? new URL(req.url).origin;
+    const origin = requestOrigin.replace("0.0.0.0", "localhost");
 
     return NextResponse.json({
       interview,

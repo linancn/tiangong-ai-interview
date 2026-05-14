@@ -105,7 +105,12 @@ export default async function AdminPage() {
                             {session.turnCount} / {interview.maxTurns}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="outline" size="sm" render={<Link href={`/admin/sessions/${session.id}`} />}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              nativeButton={false}
+                              render={<Link href={`/admin/sessions/${session.id}`} />}
+                            >
                               查看
                               <ExternalLinkIcon className="size-3.5" />
                             </Button>
