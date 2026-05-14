@@ -13,6 +13,7 @@ import type {
   InterviewStatus,
   MessageRole,
   ReportState,
+  InterviewLanguage,
   RubricDimension,
 } from "@/lib/interview/types";
 
@@ -22,6 +23,7 @@ export const interviews = pgTable("interviews", {
   companyName: text("company_name"),
   companyContext: text("company_context"),
   roleName: text("role_name").notNull(),
+  language: text("language").$type<InterviewLanguage>().notNull().default("zh"),
   jd: text("jd"),
   goals: jsonb("goals").$type<string[]>().notNull(),
   rubric: jsonb("rubric").$type<RubricDimension[]>().notNull(),

@@ -1,7 +1,8 @@
-import type { ReportState, RubricDimension } from "./types";
+import type { InterviewLanguage, ReportState, RubricDimension } from "./types";
 
 type PromptInput = {
   roleName: string;
+  language: InterviewLanguage;
   companyName?: string | null;
   companyContext?: string | null;
   jd: string | null;
@@ -9,6 +10,11 @@ type PromptInput = {
   rubric: RubricDimension[];
   reportState: ReportState;
   candidateResume?: string | null;
+};
+
+const languageNames: Record<InterviewLanguage, string> = {
+  zh: "中文",
+  en: "English",
 };
 
 function formatList(items: string[], fallback: string) {
@@ -27,7 +33,10 @@ function formatRubric(rubric: RubricDimension[]) {
 }
 
 function formatInterviewContext(input: PromptInput) {
-  return `岗位名称：
+  return `界面和输出语言：
+${languageNames[input.language]}
+
+岗位名称：
 ${input.roleName}
 
 公司或团队：
@@ -77,6 +86,7 @@ ${JSON.stringify(input.reportState)}
 - 只用候选人回答里的事实。
 - 简历只能作为追问线索，不能当作候选人已经完成回答的 evidence。
 - 不要把“技术深度”“系统设计”“线上故障”硬套到非技术岗位。
+- schema 中所有自然语言字符串字段必须使用${languageNames[input.language]}。
 - 不要输出自然语言解释，只输出 JSON。`;
 }
 
@@ -108,5 +118,6 @@ ${coveredDimensions.join(", ") || "暂无"}
 - 面向不同岗位生成不同问题：例如销售问客户推进和业绩证据，运营问指标和策略复盘，财务问分析口径和风险控制，人力问招聘/组织场景，法务问合同/合规判断，管理岗问团队和决策，技术岗才问技术实现。
 - 如果上下文不足，先问能补齐岗位匹配证据的经历型问题，不要默认问编程、架构、系统设计或线上故障。
 - 追问应结合公司阶段、客户类型、业务模式和岗位产出；没有公司背景时，围绕 JD 和面试目标提问。
+- 候选人界面语言是${languageNames[input.language]}，下一道问题必须使用${languageNames[input.language]}。
 - 输出只包含下一道问题。`;
 }

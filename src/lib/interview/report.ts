@@ -1,6 +1,7 @@
 import {
   normalizeId,
   type EvalPatch,
+  type InterviewLanguage,
   type ReportState,
   type RubricDimension,
 } from "./types";
@@ -12,6 +13,7 @@ type TranscriptMessage = {
 
 type RenderReportInput = {
   roleName: string;
+  language: InterviewLanguage;
   companyName?: string | null;
   candidateName?: string | null;
   rubric: RubricDimension[];
@@ -112,7 +114,21 @@ function conclusionFromScore(score: number | null) {
   return "当前证据显示匹配度偏低，建议谨慎推进。";
 }
 
-function summarizeTranscript(transcript: TranscriptMessage[]) {
+function conclusionFromScoreEn(score: number | null) {
+  if (score === null) {
+    return "Evidence is insufficient. Continue the interview before making a decision.";
+  }
+  if (score >= 8) return "Overall match is strong. Recommend moving forward.";
+  if (score >= 6) {
+    return "There is a reasonable basis to continue, with risks to review.";
+  }
+  return "Current evidence indicates a weak fit. Proceed with caution.";
+}
+
+function summarizeTranscript(
+  transcript: TranscriptMessage[],
+  language: InterviewLanguage,
+) {
   const pairs: string[] = [];
   let currentQuestion = "";
 
@@ -123,16 +139,26 @@ function summarizeTranscript(transcript: TranscriptMessage[]) {
     }
 
     if (message.role === "user" && message.content.trim()) {
+      const fallbackQuestion =
+        language === "en" ? "Candidate-initiated input" : "候选人主动输入";
+      const questionLabel = language === "en" ? "Q" : "问";
+      const answerLabel = language === "en" ? "A" : "答";
+
       pairs.push(
-        `- 问：${currentQuestion || "候选人主动输入"}\n  答：${message.content.trim()}`,
+        `- ${questionLabel}: ${currentQuestion || fallbackQuestion}\n  ${answerLabel}: ${message.content.trim()}`,
       );
     }
   }
 
-  return pairs.length > 0 ? pairs.join("\n") : "- 暂无完整问答。";
+  if (pairs.length > 0) return pairs.join("\n");
+  return language === "en" ? "- No complete Q&A yet." : "- 暂无完整问答。";
 }
 
 export function renderMarkdownReport(input: RenderReportInput) {
+  if (input.language === "en") {
+    return renderMarkdownReportEn(input);
+  }
+
   const average = averageScore(input.reportState);
   const headerLines = [
     input.companyName ? `公司或团队：${input.companyName}` : null,
@@ -197,6 +223,79 @@ ${followups}
 
 ## 六、完整问答摘要
 
-${summarizeTranscript(input.transcript)}
+${summarizeTranscript(input.transcript, input.language)}
+`;
+}
+
+function renderMarkdownReportEn(input: RenderReportInput) {
+  const average = averageScore(input.reportState);
+  const headerLines = [
+    input.companyName ? `Company or team: ${input.companyName}` : null,
+    `Candidate: ${input.candidateName || "Not provided"}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const scoreRows = input.rubric
+    .map((dimension) => {
+      const score = input.reportState.scores[dimension.id];
+      const evidence = score?.evidence.length
+        ? score.evidence.join("; ")
+        : "None";
+      const concerns = score?.concerns.length
+        ? score.concerns.join("; ")
+        : "None";
+      return `| ${dimension.name} | ${score?.score ?? "N/A"} | ${evidence} | ${concerns} |`;
+    })
+    .join("\n");
+
+  const evidenceList = input.rubric
+    .flatMap((dimension) =>
+      (input.reportState.scores[dimension.id]?.evidence ?? []).map(
+        (evidence) => `- ${dimension.name}: ${evidence}`,
+      ),
+    )
+    .join("\n");
+
+  const riskFlags = input.reportState.riskFlags.length
+    ? input.reportState.riskFlags.map((risk) => `- ${risk}`).join("\n")
+    : "- No clear risk flags yet.";
+
+  const followups = input.reportState.recommendedFollowups.length
+    ? input.reportState.recommendedFollowups
+        .map((question) => `- ${question}`)
+        .join("\n")
+    : "- No follow-up questions recommended yet.";
+
+  return `# Interview Report: ${input.roleName}
+
+${headerLines}
+
+## 1. Overall Recommendation
+
+${conclusionFromScoreEn(average)}
+
+Average score: ${average === null ? "N/A" : average.toFixed(1)}
+
+## 2. Score Overview
+
+| Dimension | Score | Evidence | Risk |
+|---|---:|---|---|
+${scoreRows}
+
+## 3. Key Evidence
+
+${evidenceList || "- No reliable evidence yet."}
+
+## 4. Risk Flags
+
+${riskFlags}
+
+## 5. Recommended Follow-up Questions
+
+${followups}
+
+## 6. Full Q&A Summary
+
+${summarizeTranscript(input.transcript, input.language)}
 `;
 }

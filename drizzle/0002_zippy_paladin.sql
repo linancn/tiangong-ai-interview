@@ -1,0 +1,1 @@
+ALTER TABLE "interviews" ADD COLUMN "language" text DEFAULT 'zh' NOT NULL;

@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isAdminAuthenticated } from "@/lib/server/admin-auth";
@@ -24,10 +30,11 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/20 px-4">
-      <Card className="w-full max-w-sm">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-sm rounded-lg shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">管理员登录</CardTitle>
+          <CardDescription>Tiangong Interview Console</CardDescription>
         </CardHeader>
         <CardContent>
           <form action="/api/admin/login" method="post" className="space-y-4">

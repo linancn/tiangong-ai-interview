@@ -15,6 +15,13 @@
       "when": 1778762994750,
       "tag": "0001_cold_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778763930750,
+      "tag": "0002_zippy_paladin",
+      "breakpoints": true
     }
   ]
 }

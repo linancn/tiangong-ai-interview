@@ -12,6 +12,7 @@ import {
   createInitialReportState,
   DEFAULT_RUBRIC,
   normalizeId,
+  type InterviewLanguage,
   type MessageRole,
   type ReportState,
   type RubricDimension,
@@ -22,6 +23,7 @@ export type CreateInterviewInput = {
   companyName?: string;
   companyContext?: string;
   roleName: string;
+  language: InterviewLanguage;
   jd?: string;
   goals: string[];
   rubric: RubricDimension[];
@@ -78,6 +80,7 @@ export async function createInterviewWithSession(input: CreateInterviewInput) {
       companyName: input.companyName || null,
       companyContext: input.companyContext || null,
       roleName: input.roleName,
+      language: input.language,
       jd: input.jd || null,
       goals: input.goals,
       rubric: cleanRubric,

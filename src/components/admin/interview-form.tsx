@@ -2,12 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CopyIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import { CopyIcon, Globe2Icon, Loader2Icon, PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 type CreateResult = {
@@ -48,9 +61,12 @@ export function InterviewForm() {
   }
 
   return (
-    <Card>
+    <Card className="rounded-lg border-border/80 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-base">创建面试</CardTitle>
+        <CardTitle className="text-base">创建面试 / New Interview</CardTitle>
+        <CardDescription>
+          配置岗位、语言、考核目标和候选人入口。
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={onSubmit} className="grid gap-4">
@@ -91,6 +107,20 @@ export function InterviewForm() {
               required
               placeholder="客户成功经理 / 财务分析师 / 产品运营 / 护士长"
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="language">界面语言 / Interface Language</Label>
+            <Select name="language" defaultValue="zh">
+              <SelectTrigger id="language" className="w-full">
+                <Globe2Icon className="size-4 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="start">
+                <SelectItem value="zh">中文界面，中文提问</SelectItem>
+                <SelectItem value="en">English UI, English questions</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-2">
@@ -154,7 +184,7 @@ export function InterviewForm() {
 
           {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
-          <Button type="submit" disabled={loading} className="w-fit">
+          <Button type="submit" disabled={loading} className="w-full md:w-fit">
             {loading ? (
               <Loader2Icon className="size-4 animate-spin" />
             ) : (
@@ -165,7 +195,7 @@ export function InterviewForm() {
         </form>
 
         {result ? (
-          <div className="mt-5 rounded-md border bg-muted/40 p-3">
+          <div className="mt-5 rounded-lg border bg-accent/40 p-3">
             <p className="mb-2 font-medium text-sm">候选人链接</p>
             <div className="flex gap-2">
               <Input readOnly value={result.candidateUrl} />

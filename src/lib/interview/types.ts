@@ -1,5 +1,7 @@
 export type InterviewStatus = "active" | "finished";
 
+export type InterviewLanguage = "zh" | "en";
+
 export type RubricDimension = {
   id: string;
   name: string;

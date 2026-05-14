@@ -28,6 +28,7 @@ export async function GET(_req: Request, { params }: Params) {
       bundle.report.finalMarkdown ??
       renderMarkdownReport({
         roleName: bundle.interview.roleName,
+        language: bundle.interview.language,
         companyName: bundle.interview.companyName,
         candidateName: bundle.session.candidateName,
         rubric: bundle.interview.rubric,

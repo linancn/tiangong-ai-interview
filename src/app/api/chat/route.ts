@@ -112,6 +112,7 @@ export async function POST(req: Request) {
     schema: EvalSchema,
     system: buildEvaluatorPrompt({
       roleName: bundle.interview.roleName,
+      language: bundle.interview.language,
       companyName: bundle.interview.companyName,
       companyContext: bundle.interview.companyContext,
       jd: bundle.interview.jd,
@@ -140,6 +141,7 @@ export async function POST(req: Request) {
     };
     const finalMarkdown = renderMarkdownReport({
       roleName: bundle.interview.roleName,
+      language: bundle.interview.language,
       companyName: bundle.interview.companyName,
       candidateName: bundle.session.candidateName,
       rubric: bundle.interview.rubric,
@@ -162,6 +164,7 @@ export async function POST(req: Request) {
     model,
     system: `${buildInterviewerPrompt({
       roleName: bundle.interview.roleName,
+      language: bundle.interview.language,
       companyName: bundle.interview.companyName,
       companyContext: bundle.interview.companyContext,
       jd: bundle.interview.jd,

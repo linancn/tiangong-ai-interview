@@ -9,6 +9,7 @@
 - 第一版不做语音、视频、复杂 RAG、多人协作、长期记忆。
 - 候选人页面不能显示评分、风险点、rubric、追问建议、报告进度等会诱导回答的信息。
 - 面试逻辑必须适配不同岗位和公司场景，不要默认生成前端、后端、架构、系统设计、线上故障类问题。
+- 每个面试都有 `language`，`zh` 使用中文候选人界面和中文提问，`en` 使用英文候选人界面和英文提问。
 
 ## 技术栈
 
@@ -131,7 +132,7 @@ Drizzle schema 在 `src/db/schema.ts`，迁移目录是 `drizzle/`。
 核心表：
 
 - `interviews`
-  - 面试配置：标题、公司/团队、公司和岗位背景、岗位、JD、目标、rubric、最大轮数。
+  - 面试配置：标题、公司/团队、公司和岗位背景、岗位、界面语言、JD、目标、rubric、最大轮数。
 - `interview_sessions`
   - 候选人会话：候选人姓名/简历、token、状态、轮次。
 - `interview_messages`
@@ -204,6 +205,7 @@ Drizzle schema 在 `src/db/schema.ts`，迁移目录是 `drizzle/`。
 - `src/app/admin/page.tsx`：创建面试、查看记录列表、退出登录。
 - `src/components/admin/interview-form.tsx`：创建面试表单，提交后显示完整候选人链接。
 - `src/app/admin/sessions/[id]/page.tsx`：完整对话、评分、报告预览、导出 Markdown。
+- `src/components/assistant-ui/thread.tsx`：候选人聊天 Thread，文案由 `language` 切换。
 
 UI 改动后用 Playwright 看真实页面，不只靠静态代码判断。优先用可访问性角色、文本和 test id 定位。
 
@@ -213,6 +215,7 @@ UI 改动后用 Playwright 看真实页面，不只靠静态代码判断。优�
 
 - 需要管理员登录。
 - 请求字段：`title`、`roleName`、`jd`、`goalsText`、`rubricText`、`maxTurns`、`candidateName`、`candidateResume`。
+- `language` 可选值为 `zh` 或 `en`，默认 `zh`。
 - 响应包含 `candidateUrl`，由 `candidateInterviewUrl()` 生成。
 
 `DELETE /api/admin/interviews`

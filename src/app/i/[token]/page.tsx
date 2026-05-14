@@ -15,5 +15,12 @@ export default async function CandidatePage({ params }: PageProps) {
 
   if (!bundle) notFound();
 
-  return <CandidateInterviewChat token={token} />;
+  return (
+    <CandidateInterviewChat
+      token={token}
+      language={bundle.interview.language}
+      roleName={bundle.interview.roleName}
+      companyName={bundle.interview.companyName}
+    />
+  );
 }
