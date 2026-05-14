@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { renderMarkdownReport } from "@/lib/interview/report";
+import { requireAdminApiAuth } from "@/lib/server/admin-auth";
 import {
   getSessionBundleById,
   listSessionMessages,
@@ -12,6 +13,9 @@ type Params = {
 
 export async function GET(_req: Request, { params }: Params) {
   try {
+    const authError = await requireAdminApiAuth();
+    if (authError) return authError;
+
     const { id } = await params;
     const bundle = await getSessionBundleById(id);
 

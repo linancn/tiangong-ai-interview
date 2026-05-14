@@ -9,23 +9,29 @@ type RuntimeConfig = {
 };
 
 let cachedConfig: RuntimeConfig | null = null;
+let cachedFileConfig: Record<string, unknown> | null = null;
 
 function readString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-export function getRuntimeConfig(): RuntimeConfig {
-  if (cachedConfig) return cachedConfig;
-
-  let fileConfig: Record<string, unknown> = {};
+function getFileConfig() {
+  if (cachedFileConfig) return cachedFileConfig;
   try {
-    fileConfig = parse(
+    cachedFileConfig = parse(
       readFileSync(join(process.cwd(), "config.toml"), "utf8"),
     ) as Record<string, unknown>;
   } catch {
-    fileConfig = {};
+    cachedFileConfig = {};
   }
 
+  return cachedFileConfig;
+}
+
+export function getRuntimeConfig(): RuntimeConfig {
+  if (cachedConfig) return cachedConfig;
+
+  const fileConfig = getFileConfig();
   const apiKey =
     readString(fileConfig.api_key) ||
     readString(fileConfig.env_key) ||
@@ -43,4 +49,47 @@ export function getRuntimeConfig(): RuntimeConfig {
 
   cachedConfig = { apiKey, baseURL, model };
   return cachedConfig;
+}
+
+export function getAdminPassword() {
+  const fileConfig = getFileConfig();
+  const password =
+    readString(fileConfig.admin_password) || process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    throw new Error(
+      "Missing admin password. Set admin_password in config.toml or ADMIN_PASSWORD.",
+    );
+  }
+
+  return password;
+}
+
+export function getDeploymentUrl() {
+  const fileConfig = getFileConfig();
+  const value =
+    readString(fileConfig.deployment_url) ||
+    readString(fileConfig.app_url) ||
+    readString(fileConfig.public_base_url) ||
+    process.env.DEPLOYMENT_URL ||
+    process.env.APP_URL ||
+    process.env.PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL;
+
+  if (!value) return undefined;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(
+      "Invalid deployment_url. Use an absolute URL, for example https://thuenv.tiangong.world:3001.",
+    );
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Invalid deployment_url. Only http and https are supported.");
+  }
+
+  return value.replace(/\/+$/, "");
 }

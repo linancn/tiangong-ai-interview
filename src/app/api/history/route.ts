@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireAdminApiAuth } from "@/lib/server/admin-auth";
 import {
   getSessionBundleById,
   getSessionBundleByToken,
@@ -11,11 +12,33 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
     const id = url.searchParams.get("id");
-    const bundle = token
-      ? await getSessionBundleByToken(token)
-      : id
-        ? await getSessionBundleById(id)
-        : null;
+
+    if (token) {
+      const bundle = await getSessionBundleByToken(token);
+
+      if (!bundle) {
+        return NextResponse.json(
+          { error: "Session not found." },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json({
+        session: {
+          status: bundle.session.status,
+          turnCount: bundle.session.turnCount,
+        },
+        interview: {
+          roleName: bundle.interview.roleName,
+          maxTurns: bundle.interview.maxTurns,
+        },
+      });
+    }
+
+    const authError = await requireAdminApiAuth();
+    if (authError) return authError;
+
+    const bundle = id ? await getSessionBundleById(id) : null;
 
     if (!bundle) {
       return NextResponse.json({ error: "Session not found." }, { status: 404 });

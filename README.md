@@ -31,7 +31,12 @@ http://localhost:3001/admin
 model = "gpt-5.4-mini"
 base_url = "https://api.openai.com/v1"
 api_key = "..."
+admin_password = "..."
+deployment_url = "https://thuenv.tiangong.world:3001"
 ```
+
+`deployment_url` 用来生成完整候选人链接，例如 `/i/[token]` 会显示为
+`https://thuenv.tiangong.world:3001/i/[token]`。不配置时会按当前请求地址回退。
 
 数据库使用 Neon/Postgres：
 
@@ -41,6 +46,12 @@ pnpm db:migrate
 ```
 
 `config.toml` 已加入 `.gitignore`，不要提交真实密钥。
+
+本机 HTTP 运行时无需额外设置。部署到 HTTPS 反代后，可以设置：
+
+```bash
+export ADMIN_COOKIE_SECURE=true
+```
 
 ## Docker 本机生产环境
 

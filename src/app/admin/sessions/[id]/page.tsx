@@ -9,10 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { renderMarkdownReport } from "@/lib/interview/report";
+import { requireAdminPageAuth } from "@/lib/server/admin-auth";
 import {
   getSessionBundleById,
   listSessionMessages,
 } from "@/lib/server/interviews";
+import { candidateInterviewUrl } from "@/lib/server/request-url";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +24,13 @@ type PageProps = {
 
 export default async function SessionDetailPage({ params }: PageProps) {
   const { id } = await params;
+  await requireAdminPageAuth(`/admin/sessions/${id}`);
   const bundle = await getSessionBundleById(id).catch(() => null);
 
   if (!bundle) notFound();
 
   const messages = await listSessionMessages(bundle.session.id);
+  const candidateUrl = candidateInterviewUrl(bundle.session.token);
   const markdown =
     bundle.report.finalMarkdown ??
     renderMarkdownReport({
@@ -71,9 +75,14 @@ export default async function SessionDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <p className="text-muted-foreground">候选人链接</p>
-                <p className="break-all font-mono text-xs">
-                  /i/{bundle.session.token}
-                </p>
+                <a
+                  className="break-all font-mono text-xs underline-offset-4 hover:underline"
+                  href={candidateUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {candidateUrl}
+                </a>
               </div>
               <div>
                 <p className="text-muted-foreground">进度</p>

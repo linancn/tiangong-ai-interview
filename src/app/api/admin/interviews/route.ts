@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { requireAdminApiAuth } from "@/lib/server/admin-auth";
 import {
   createInterviewWithSession,
   linesToGoals,
   linesToRubric,
   listAdminSessions,
 } from "@/lib/server/interviews";
+import { candidateInterviewUrl } from "@/lib/server/request-url";
 
 const CreateInterviewSchema = z.object({
   title: z.string().min(1),
@@ -21,6 +23,9 @@ const CreateInterviewSchema = z.object({
 
 export async function GET() {
   try {
+    const authError = await requireAdminApiAuth();
+    if (authError) return authError;
+
     const rows = await listAdminSessions();
     return NextResponse.json({
       sessions: rows.map(({ session, interview, report }) => ({
@@ -42,6 +47,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const authError = await requireAdminApiAuth();
+    if (authError) return authError;
+
     const payload = CreateInterviewSchema.parse(await req.json());
     const { session, interview, report } = await createInterviewWithSession({
       title: payload.title,
@@ -54,14 +62,11 @@ export async function POST(req: Request) {
       candidateResume: payload.candidateResume,
     });
 
-    const requestOrigin = req.headers.get("origin") ?? new URL(req.url).origin;
-    const origin = requestOrigin.replace("0.0.0.0", "localhost");
-
     return NextResponse.json({
       interview,
       session,
       report,
-      candidateUrl: `${origin}/i/${session.token}`,
+      candidateUrl: candidateInterviewUrl(session.token, req),
     });
   } catch (error) {
     return NextResponse.json(

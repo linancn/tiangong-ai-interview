@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { requireAdminPageAuth } from "@/lib/server/admin-auth";
 import { listAdminSessions } from "@/lib/server/interviews";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,7 @@ async function loadRows() {
 }
 
 export default async function AdminPage() {
+  await requireAdminPageAuth("/admin");
   const { rows, error } = await loadRows();
 
   return (
@@ -39,13 +41,20 @@ export default async function AdminPage() {
         </section>
 
         <section className="space-y-4">
-          <div>
-            <h1 className="font-semibold text-2xl tracking-tight">
-              面试记录
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              查看候选人对话、结构化评分和最终 Markdown 报告。
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="font-semibold text-2xl tracking-tight">
+                面试记录
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                查看候选人对话、结构化评分和最终 Markdown 报告。
+              </p>
+            </div>
+            <form action="/api/admin/logout" method="post">
+              <Button type="submit" variant="outline">
+                退出
+              </Button>
+            </form>
           </div>
 
           {error ? (
