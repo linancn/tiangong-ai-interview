@@ -2,6 +2,8 @@ import {
   normalizeId,
   type EvalPatch,
   type InterviewLanguage,
+  type LlmAssistanceAnalysis,
+  type LlmAssistanceLikelihood,
   type ReportState,
   type RubricDimension,
 } from "./types";
@@ -30,6 +32,21 @@ function uniqueAppend(existing: string[], additions: string[]) {
   }
 
   return Array.from(seen);
+}
+
+function mergeLlmAssistance(
+  current: LlmAssistanceAnalysis,
+  patch: LlmAssistanceAnalysis,
+): LlmAssistanceAnalysis {
+  return {
+    likelihood: patch.likelihood || current.likelihood,
+    summary: patch.summary.trim() || current.summary,
+    indicators: uniqueAppend(current.indicators, patch.indicators),
+    counterIndicators: uniqueAppend(
+      current.counterIndicators,
+      patch.counterIndicators,
+    ),
+  };
 }
 
 function resolveDimensionId(
@@ -68,6 +85,10 @@ export function mergeReportState(
       patch.recommendedFollowups,
     ),
     reportNotes: uniqueAppend(current.reportNotes, patch.reportNotes),
+    llmAssistance: mergeLlmAssistance(
+      current.llmAssistance,
+      patch.llmAssistance,
+    ),
   };
 
   for (const scorePatch of patch.scorePatches) {
@@ -123,6 +144,75 @@ function conclusionFromScoreEn(score: number | null) {
     return "There is a reasonable basis to continue, with risks to review.";
   }
   return "Current evidence indicates a weak fit. Proceed with caution.";
+}
+
+function llmLikelihoodLabel(
+  likelihood: LlmAssistanceLikelihood,
+  language: InterviewLanguage,
+) {
+  const labels = {
+    zh: {
+      unknown: "证据不足",
+      low: "较低",
+      medium: "中等",
+      high: "较高",
+    },
+    en: {
+      unknown: "Insufficient evidence",
+      low: "Low",
+      medium: "Medium",
+      high: "High",
+    },
+  } satisfies Record<
+    InterviewLanguage,
+    Record<LlmAssistanceLikelihood, string>
+  >;
+
+  return labels[language][likelihood];
+}
+
+function renderLlmAssistanceAnalysis(
+  analysis: LlmAssistanceAnalysis,
+  language: InterviewLanguage,
+) {
+  const likelihood = llmLikelihoodLabel(analysis.likelihood, language);
+  const summary =
+    analysis.summary ||
+    (language === "en"
+      ? "There is not enough reliable evidence to assess LLM-assisted answering."
+      : "目前没有足够可靠证据判断是否使用了大模型辅助作答。");
+  const indicators = analysis.indicators.length
+    ? analysis.indicators.map((item) => `- ${item}`).join("\n")
+    : language === "en"
+      ? "- No clear supporting signals."
+      : "- 暂无明确支持线索。";
+  const counterIndicators = analysis.counterIndicators.length
+    ? analysis.counterIndicators.map((item) => `- ${item}`).join("\n")
+    : language === "en"
+      ? "- No clear counter-signals."
+      : "- 暂无明确反向线索。";
+
+  if (language === "en") {
+    return `Likelihood: ${likelihood}
+
+Summary: ${summary}
+
+Supporting signals:
+${indicators}
+
+Counter-signals:
+${counterIndicators}`;
+  }
+
+  return `可能性判断：${likelihood}
+
+综合分析：${summary}
+
+支持线索：
+${indicators}
+
+反向线索：
+${counterIndicators}`;
 }
 
 function summarizeTranscript(
@@ -221,7 +311,11 @@ ${riskFlags}
 
 ${followups}
 
-## 六、完整问答摘要
+## 六、大模型辅助使用迹象
+
+${renderLlmAssistanceAnalysis(input.reportState.llmAssistance, input.language)}
+
+## 七、完整问答摘要
 
 ${summarizeTranscript(input.transcript, input.language)}
 `;
@@ -294,7 +388,11 @@ ${riskFlags}
 
 ${followups}
 
-## 6. Full Q&A Summary
+## 6. LLM Assistance Signals
+
+${renderLlmAssistanceAnalysis(input.reportState.llmAssistance, input.language)}
+
+## 7. Full Q&A Summary
 
 ${summarizeTranscript(input.transcript, input.language)}
 `;

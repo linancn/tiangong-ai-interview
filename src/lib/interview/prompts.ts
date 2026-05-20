@@ -80,12 +80,15 @@ ${JSON.stringify(input.reportState)}
 5. 如果候选人明确表示结束、拒绝继续，或已经没有继续追问价值，shouldFinish 为 true。
 6. currentDimension 和 scorePatches.dimension 必须使用评分维度里的 id 或 name。
 7. nextFocus 给出下一轮最需要追问的方向，必须贴合岗位、公司背景和已有证据缺口。
+8. 单独更新 llmAssistance，用来分析候选人是否可能使用大模型或相关技术栈辅助作答。这只是面试风险分析，不是作弊定性。
 
 评分原则：
 - 没有证据就不要给高分。
 - 只用候选人回答里的事实。
 - 简历只能作为追问线索，不能当作候选人已经完成回答的 evidence。
 - 不要把“技术深度”“系统设计”“线上故障”硬套到非技术岗位。
+- 分析 llmAssistance 时要综合多轮线索：回答是否异常模板化、泛泛而谈、堆叠术语、缺少一手细节；追问后能否给出可验证细节、现场取舍、失败复盘；不同轮次风格是否突变；是否主动提到使用 ChatGPT、Claude、Gemini、Copilot、Cursor、RAG、Agent、Prompt、工作流等大模型工具或技术栈。
+- 不要把表达流畅、中文书面化或懂 AI 工具本身当作充分证据；必须同时记录支持线索和反向线索。证据不足时 likelihood 用 unknown。
 - schema 中所有自然语言字符串字段必须使用${languageNames[input.language]}。
 - 不要输出自然语言解释，只输出 JSON。`;
 }

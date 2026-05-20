@@ -19,6 +19,7 @@ export default async function CandidatePage({ params }: PageProps) {
     <CandidateInterviewChat
       token={token}
       language={bundle.interview.language}
+      status={bundle.session.status}
       roleName={bundle.interview.roleName}
       companyName={bundle.interview.companyName}
     />

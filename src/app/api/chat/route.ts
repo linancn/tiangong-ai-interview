@@ -45,19 +45,31 @@ const EvalSchema = z.object({
   reportNotes: z.array(z.string()),
   riskFlags: z.array(z.string()),
   recommendedFollowups: z.array(z.string()),
+  llmAssistance: z.object({
+    likelihood: z.enum(["unknown", "low", "medium", "high"]),
+    summary: z.string(),
+    indicators: z.array(z.string()),
+    counterIndicators: z.array(z.string()),
+  }),
 });
 
-function markdownStreamResponse(markdown: string) {
+function textStreamResponse(text: string) {
   const stream = createUIMessageStream({
     execute({ writer }) {
-      const id = "final-report";
+      const id = "completion-message";
       writer.write({ type: "text-start", id });
-      writer.write({ type: "text-delta", id, delta: markdown });
+      writer.write({ type: "text-delta", id, delta: text });
       writer.write({ type: "text-end", id });
     },
   });
 
   return createUIMessageStreamResponse({ stream });
+}
+
+function completionMessage(language: "zh" | "en") {
+  return language === "en"
+    ? "The interview is complete. Thank you for participating."
+    : "面试已完成。感谢你的参与。";
 }
 
 function transcriptForPrompt(
@@ -88,8 +100,8 @@ export async function POST(req: Request) {
     return new Response("Session not found.", { status: 404 });
   }
 
-  if (bundle.session.status === "finished" && bundle.report.finalMarkdown) {
-    return markdownStreamResponse(bundle.report.finalMarkdown);
+  if (bundle.session.status === "finished") {
+    return textStreamResponse(completionMessage(bundle.interview.language));
   }
 
   if (!latestUserMessage || !latestUserText) {
@@ -155,7 +167,7 @@ export async function POST(req: Request) {
       finalMarkdown,
     });
 
-    return markdownStreamResponse(finalMarkdown);
+    return textStreamResponse(completionMessage(bundle.interview.language));
   }
 
   await saveReportState(bundle.session.id, nextReportState);

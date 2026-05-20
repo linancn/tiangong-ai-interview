@@ -22,6 +22,13 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+function hasLlmAssistanceSection(markdown: string) {
+  return (
+    markdown.includes("大模型辅助使用迹象") ||
+    markdown.includes("LLM Assistance Signals")
+  );
+}
+
 export default async function SessionDetailPage({ params }: PageProps) {
   const { id } = await params;
   await requireAdminPageAuth(`/admin/sessions/${id}`);
@@ -31,9 +38,7 @@ export default async function SessionDetailPage({ params }: PageProps) {
 
   const messages = await listSessionMessages(bundle.session.id);
   const candidateUrl = candidateInterviewUrl(bundle.session.token);
-  const markdown =
-    bundle.report.finalMarkdown ??
-    renderMarkdownReport({
+  const renderedMarkdown = renderMarkdownReport({
       roleName: bundle.interview.roleName,
       language: bundle.interview.language,
       companyName: bundle.interview.companyName,
@@ -42,6 +47,11 @@ export default async function SessionDetailPage({ params }: PageProps) {
       reportState: bundle.reportState,
       transcript: messages,
     });
+  const markdown =
+    bundle.report.finalMarkdown &&
+    hasLlmAssistanceSection(bundle.report.finalMarkdown)
+      ? bundle.report.finalMarkdown
+      : renderedMarkdown;
 
   return (
     <main className="min-h-screen bg-background">

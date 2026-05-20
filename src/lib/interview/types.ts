@@ -15,6 +15,15 @@ export type DimensionScore = {
   concerns: string[];
 };
 
+export type LlmAssistanceLikelihood = "unknown" | "low" | "medium" | "high";
+
+export type LlmAssistanceAnalysis = {
+  likelihood: LlmAssistanceLikelihood;
+  summary: string;
+  indicators: string[];
+  counterIndicators: string[];
+};
+
 export type ReportState = {
   overallStatus: "in_progress" | "finished";
   currentDimension: string | null;
@@ -23,6 +32,7 @@ export type ReportState = {
   riskFlags: string[];
   recommendedFollowups: string[];
   reportNotes: string[];
+  llmAssistance: LlmAssistanceAnalysis;
 };
 
 export type EvalPatch = {
@@ -38,6 +48,7 @@ export type EvalPatch = {
   reportNotes: string[];
   riskFlags: string[];
   recommendedFollowups: string[];
+  llmAssistance: LlmAssistanceAnalysis;
 };
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -87,6 +98,12 @@ export function createInitialReportState(
     riskFlags: [],
     recommendedFollowups: [],
     reportNotes: [],
+    llmAssistance: {
+      likelihood: "unknown",
+      summary: "",
+      indicators: [],
+      counterIndicators: [],
+    },
   };
 }
 

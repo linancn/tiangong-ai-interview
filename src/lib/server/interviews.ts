@@ -13,6 +13,7 @@ import {
   DEFAULT_RUBRIC,
   normalizeId,
   type InterviewLanguage,
+  type LlmAssistanceAnalysis,
   type MessageRole,
   type ReportState,
   type RubricDimension,
@@ -36,11 +37,25 @@ function ensureReportState(
   reportState: ReportState | Record<string, never>,
   rubric: RubricDimension[],
 ) {
-  if ("scores" in reportState && reportState.scores) {
-    return reportState as ReportState;
+  const initial = createInitialReportState(rubric);
+  if (!("scores" in reportState) || !reportState.scores) {
+    return initial;
   }
 
-  return createInitialReportState(rubric);
+  const state = reportState as ReportState & {
+    llmAssistance?: Partial<LlmAssistanceAnalysis>;
+  };
+
+  return {
+    ...initial,
+    ...state,
+    llmAssistance: {
+      ...initial.llmAssistance,
+      ...state.llmAssistance,
+      indicators: state.llmAssistance?.indicators ?? [],
+      counterIndicators: state.llmAssistance?.counterIndicators ?? [],
+    },
+  };
 }
 
 export function linesToGoals(value: string) {
