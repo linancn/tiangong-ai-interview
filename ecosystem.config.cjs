@@ -1,3 +1,12 @@
+const productionEnv = {
+  NODE_ENV: "production",
+  PORT: "3001",
+  HOSTNAME: "0.0.0.0",
+  DATABASE_URL:
+    process.env.DATABASE_URL ??
+    "postgres://tiangong:tiangong_password@localhost:5433/tiangong_interview",
+};
+
 module.exports = {
   apps: [
     {
@@ -8,11 +17,8 @@ module.exports = {
       instances: 1,
       exec_mode: "fork",
       max_memory_restart: "512M",
-      env: {
-        NODE_ENV: "production",
-        PORT: "3001",
-        HOSTNAME: "0.0.0.0",
-      },
+      env: productionEnv,
+      env_production: productionEnv,
     },
   ],
 };
