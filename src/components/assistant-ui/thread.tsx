@@ -34,6 +34,7 @@ import type { FC } from "react";
 type ThreadCopy = {
   welcomeTitle: string;
   welcomeDescription: string;
+  waitingForQuestion: string;
   inputPlaceholder: string;
   inputLabel: string;
   send: string;
@@ -46,6 +47,7 @@ const threadCopy = {
     welcomeTitle: "面试开始",
     welcomeDescription:
       "请先介绍一段最能代表你岗位匹配度的工作、项目或实践经历。",
+    waitingForQuestion: "正在生成下一个问题",
     inputPlaceholder: "输入你的回答...",
     inputLabel: "消息输入",
     send: "发送",
@@ -56,6 +58,7 @@ const threadCopy = {
     welcomeTitle: "Interview started",
     welcomeDescription:
       "Start with a work, research, project, or practical experience that best shows your fit for this role.",
+    waitingForQuestion: "Drafting the next question",
     inputPlaceholder: "Type your answer...",
     inputLabel: "Message input",
     send: "Send",
@@ -95,7 +98,7 @@ export const Thread: FC<ThreadProps> = ({ language }) => {
             className="mb-10 flex flex-col gap-y-8 empty:hidden"
           >
             <ThreadPrimitive.Messages>
-              {() => <ThreadMessage />}
+              {() => <ThreadMessage copy={copy} />}
             </ThreadPrimitive.Messages>
           </div>
 
@@ -109,11 +112,11 @@ export const Thread: FC<ThreadProps> = ({ language }) => {
   );
 };
 
-const ThreadMessage: FC = () => {
+const ThreadMessage: FC<{ copy: ThreadCopy }> = ({ copy }) => {
   const role = useAuiState((s) => s.message.role);
 
   if (role === "user") return <UserMessage />;
-  return <AssistantMessage />;
+  return <AssistantMessage copy={copy} />;
 };
 
 const ThreadScrollToBottom: FC<{ copy: ThreadCopy }> = ({ copy }) => {
@@ -182,7 +185,28 @@ const MessageError: FC = () => {
   );
 };
 
-const AssistantMessage: FC = () => {
+const AssistantMessage: FC<{ copy: ThreadCopy }> = ({ copy }) => {
+  const showTypingIndicator = useAuiState((s) => {
+    if (s.message.status?.type !== "running") return false;
+
+    return !s.message.parts.some((part) => {
+      if (part.type === "text") return part.text.trim().length > 0;
+      return true;
+    });
+  });
+
+  if (showTypingIndicator) {
+    return (
+      <MessagePrimitive.Root
+        data-slot="aui_assistant-message-root"
+        data-role="assistant"
+        className="fade-in slide-in-from-bottom-1 relative animate-in duration-150 [contain-intrinsic-size:auto_60px] [content-visibility:auto]"
+      >
+        <AssistantTypingIndicator label={copy.waitingForQuestion} />
+      </MessagePrimitive.Root>
+    );
+  }
+
   return (
     <MessagePrimitive.Root
       data-slot="aui_assistant-message-root"
@@ -243,6 +267,21 @@ const AssistantMessage: FC = () => {
         <MessageError />
       </div>
     </MessagePrimitive.Root>
+  );
+};
+
+const AssistantTypingIndicator: FC<{ label: string }> = ({ label }) => {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label={label}
+      className="aui-assistant-typing inline-flex h-10 w-fit items-center gap-1.5 rounded-2xl border bg-card px-4 text-muted-foreground shadow-sm"
+    >
+      <span className="aui-typing-dot size-1.5 rounded-full bg-current" />
+      <span className="aui-typing-dot size-1.5 rounded-full bg-current" />
+      <span className="aui-typing-dot size-1.5 rounded-full bg-current" />
+    </div>
   );
 };
 
