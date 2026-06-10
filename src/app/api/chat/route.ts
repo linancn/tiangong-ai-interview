@@ -68,8 +68,8 @@ function textStreamResponse(text: string) {
 
 function completionMessage(language: "zh" | "en") {
   return language === "en"
-    ? "The interview is complete. Thank you for participating."
-    : "面试已完成。感谢你的参与。";
+    ? "The interview is now complete. No further reply is needed. Thank you for participating."
+    : "本次面试到此结束，后续无需继续回复。感谢你的参与。";
 }
 
 function transcriptForPrompt(
@@ -147,6 +147,7 @@ export async function POST(req: Request) {
     bundle.session.turnCount + 1 >= bundle.interview.maxTurns;
 
   if (shouldFinish) {
+    const finalMessageText = completionMessage(bundle.interview.language);
     const finalReportState = {
       ...nextReportState,
       overallStatus: "finished" as const,
@@ -161,13 +162,21 @@ export async function POST(req: Request) {
       transcript: savedMessages,
     });
 
+    await saveMessage({
+      sessionId: bundle.session.id,
+      externalId: `assistant:completion:${latestUserMessage.id}`,
+      role: "assistant",
+      content: finalMessageText,
+      metadata: { type: "completion" },
+    });
+
     await finishSession({
       sessionId: bundle.session.id,
       reportState: finalReportState,
       finalMarkdown,
     });
 
-    return textStreamResponse(completionMessage(bundle.interview.language));
+    return textStreamResponse(finalMessageText);
   }
 
   await saveReportState(bundle.session.id, nextReportState);

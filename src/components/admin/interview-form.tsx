@@ -162,7 +162,7 @@ export function InterviewForm() {
                 type="number"
                 min={1}
                 max={30}
-                defaultValue={10}
+                defaultValue={12}
               />
             </div>
 

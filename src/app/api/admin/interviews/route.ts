@@ -20,7 +20,7 @@ const CreateInterviewSchema = z.object({
   jd: z.string().optional(),
   goalsText: z.string().optional(),
   rubricText: z.string().optional(),
-  maxTurns: z.coerce.number().int().min(1).max(30).default(10),
+  maxTurns: z.coerce.number().int().min(1).max(30).default(12),
   candidateName: z.string().optional(),
   candidateResume: z.string().optional(),
 });
