@@ -1,4 +1,5 @@
 import {
+  APICallError,
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -72,6 +73,41 @@ function completionMessage(language: "zh" | "en") {
     : "本次面试到此结束，后续无需继续回复。感谢你的参与。";
 }
 
+function modelFailureMessage(language: "zh" | "en") {
+  return language === "en"
+    ? "The interview service is temporarily unavailable. Please try sending your answer again in a moment."
+    : "面试服务暂时不可用，请稍后重新发送你的回答。";
+}
+
+function logModelFailure(stage: string, error: unknown) {
+  if (APICallError.isInstance(error)) {
+    console.error("Interview model request failed", {
+      stage,
+      name: error.name,
+      message: error.message,
+      statusCode: error.statusCode,
+      responseBody: error.responseBody,
+      isRetryable: error.isRetryable,
+      url: error.url,
+    });
+    return;
+  }
+
+  if (error instanceof Error) {
+    console.error("Interview model request failed", {
+      stage,
+      name: error.name,
+      message: error.message,
+    });
+    return;
+  }
+
+  console.error("Interview model request failed", {
+    stage,
+    type: typeof error,
+  });
+}
+
 function transcriptForPrompt(
   messages: Array<{ role: string; content: string }>,
 ) {
@@ -119,22 +155,28 @@ export async function POST(req: Request) {
   const savedMessages = await listSessionMessages(bundle.session.id);
   const model = getInterviewModel();
 
-  const evalResult = await generateObject({
-    model,
-    schema: EvalSchema,
-    system: buildEvaluatorPrompt({
-      roleName: bundle.interview.roleName,
-      language: bundle.interview.language,
-      companyName: bundle.interview.companyName,
-      companyContext: bundle.interview.companyContext,
-      jd: bundle.interview.jd,
-      goals: bundle.interview.goals,
-      rubric: bundle.interview.rubric,
-      reportState: bundle.reportState,
-      candidateResume: bundle.session.candidateResume,
-    }),
-    prompt: `最近对话：\n${transcriptForPrompt(savedMessages)}\n\n候选人最新回答：\n${latestUserText}`,
-  });
+  let evalResult: Awaited<ReturnType<typeof generateObject<typeof EvalSchema>>>;
+  try {
+    evalResult = await generateObject({
+      model,
+      schema: EvalSchema,
+      system: buildEvaluatorPrompt({
+        roleName: bundle.interview.roleName,
+        language: bundle.interview.language,
+        companyName: bundle.interview.companyName,
+        companyContext: bundle.interview.companyContext,
+        jd: bundle.interview.jd,
+        goals: bundle.interview.goals,
+        rubric: bundle.interview.rubric,
+        reportState: bundle.reportState,
+        candidateResume: bundle.session.candidateResume,
+      }),
+      prompt: `最近对话：\n${transcriptForPrompt(savedMessages)}\n\n候选人最新回答：\n${latestUserText}`,
+    });
+  } catch (error) {
+    logModelFailure("evaluate-answer", error);
+    return textStreamResponse(modelFailureMessage(bundle.interview.language));
+  }
 
   const nextReportState = mergeReportState(
     bundle.reportState,
@@ -214,7 +256,12 @@ export async function POST(req: Request) {
 
       await incrementTurn(bundle.session.id);
     },
+    onError: ({ error }) => {
+      logModelFailure("stream-next-question", error);
+    },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    onError: () => modelFailureMessage(bundle.interview.language),
+  });
 }

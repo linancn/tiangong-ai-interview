@@ -9,5 +9,5 @@ export function getInterviewModel() {
     baseURL: config.baseURL,
   });
 
-  return provider(config.model);
+  return provider.chat(config.model);
 }
