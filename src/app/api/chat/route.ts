@@ -58,9 +58,11 @@ function textStreamResponse(text: string) {
   const stream = createUIMessageStream({
     execute({ writer }) {
       const id = "completion-message";
+      writer.write({ type: "start" });
       writer.write({ type: "text-start", id });
       writer.write({ type: "text-delta", id, delta: text });
       writer.write({ type: "text-end", id });
+      writer.write({ type: "finish" });
     },
   });
 
