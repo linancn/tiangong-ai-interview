@@ -119,15 +119,6 @@ export function appendAskedQuestion(
   };
 }
 
-function averageScore(reportState: ReportState) {
-  const scores = Object.values(reportState.scores)
-    .map((score) => score.score)
-    .filter((score): score is number => typeof score === "number");
-
-  if (scores.length === 0) return null;
-  return scores.reduce((sum, score) => sum + score, 0) / scores.length;
-}
-
 function conclusionFromScore(score: number | null) {
   if (score === null) return "证据不足，建议继续补充面试记录。";
   if (score >= 8) return "整体匹配度较高，建议进入下一轮。";
@@ -144,6 +135,35 @@ function conclusionFromScoreEn(score: number | null) {
     return "There is a reasonable basis to continue, with risks to review.";
   }
   return "Current evidence indicates a weak fit. Proceed with caution.";
+}
+
+export function getReportAssessment(
+  reportState: ReportState,
+  rubric: RubricDimension[],
+  language: InterviewLanguage,
+) {
+  const scores = rubric
+    .map((dimension) => reportState.scores[dimension.id]?.score)
+    .filter(
+      (score): score is number =>
+        typeof score === "number" && Number.isFinite(score),
+    );
+  const scoredDimensions = scores.length;
+  const totalDimensions = rubric.length;
+  const average =
+    scoredDimensions > 0
+      ? scores.reduce((sum, score) => sum + score, 0) / scoredDimensions
+      : null;
+  const complete = totalDimensions > 0 && scoredDimensions === totalDimensions;
+  const conclusion = !complete
+    ? language === "en"
+      ? "Some dimensions remain unscored. Gather more interview evidence before making a clear recommendation to move forward."
+      : "仍有维度未评分，现有证据不足以给出明确的通过建议；请补充相关面试证据。"
+    : language === "en"
+      ? conclusionFromScoreEn(average)
+      : conclusionFromScore(average);
+
+  return { scoredDimensions, totalDimensions, average, complete, conclusion };
 }
 
 function llmLikelihoodLabel(
@@ -249,7 +269,11 @@ export function renderMarkdownReport(input: RenderReportInput) {
     return renderMarkdownReportEn(input);
   }
 
-  const average = averageScore(input.reportState);
+  const assessment = getReportAssessment(
+    input.reportState,
+    input.rubric,
+    input.language,
+  );
   const headerLines = [
     input.companyName ? `公司或团队：${input.companyName}` : null,
     `候选人：${input.candidateName || "未填写"}`,
@@ -289,9 +313,11 @@ ${headerLines}
 
 ## 一、总体结论
 
-${conclusionFromScore(average)}
+${assessment.conclusion}
 
-平均分：${average === null ? "N/A" : average.toFixed(1)}
+已评分维度：${assessment.scoredDimensions} / ${assessment.totalDimensions}
+
+平均分${assessment.complete ? "" : "（仅已评分维度）"}：${assessment.average === null ? "N/A" : assessment.average.toFixed(1)}
 
 ## 二、评分概览
 
@@ -322,7 +348,11 @@ ${summarizeTranscript(input.transcript, input.language)}
 }
 
 function renderMarkdownReportEn(input: RenderReportInput) {
-  const average = averageScore(input.reportState);
+  const assessment = getReportAssessment(
+    input.reportState,
+    input.rubric,
+    input.language,
+  );
   const headerLines = [
     input.companyName ? `Company or team: ${input.companyName}` : null,
     `Candidate: ${input.candidateName || "Not provided"}`,
@@ -366,9 +396,11 @@ ${headerLines}
 
 ## 1. Overall Recommendation
 
-${conclusionFromScoreEn(average)}
+${assessment.conclusion}
 
-Average score: ${average === null ? "N/A" : average.toFixed(1)}
+Scored dimensions: ${assessment.scoredDimensions} / ${assessment.totalDimensions}
+
+Average score${assessment.complete ? "" : " (scored dimensions only)"}: ${assessment.average === null ? "N/A" : assessment.average.toFixed(1)}
 
 ## 2. Score Overview
 

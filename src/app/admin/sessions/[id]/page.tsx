@@ -8,7 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { renderMarkdownReport } from "@/lib/interview/report";
+import {
+  getReportAssessment,
+  renderMarkdownReport,
+} from "@/lib/interview/report";
 import { requireAdminPageAuth } from "@/lib/server/admin-auth";
 import {
   getSessionBundleById,
@@ -22,10 +25,44 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-function hasLlmAssistanceSection(markdown: string) {
+function SummaryList({
+  title,
+  items,
+  empty,
+  more,
+}: {
+  title: string;
+  items: string[];
+  empty: string;
+  more: string;
+}) {
   return (
-    markdown.includes("大模型辅助使用迹象") ||
-    markdown.includes("LLM Assistance Signals")
+    <div>
+      <h2 className="mb-2 font-medium">{title}</h2>
+      {items.length ? (
+        <>
+          <ul className="list-disc space-y-1 pl-5">
+            {items.slice(0, 3).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          {items.length > 3 && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-muted-foreground">
+                {more}（{items.length - 3}）
+              </summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {items.slice(3).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
+      ) : (
+        <p className="text-muted-foreground">{empty}</p>
+      )}
+    </div>
   );
 }
 
@@ -38,20 +75,50 @@ export default async function SessionDetailPage({ params }: PageProps) {
 
   const messages = await listSessionMessages(bundle.session.id);
   const candidateUrl = candidateInterviewUrl(bundle.session.token);
-  const renderedMarkdown = renderMarkdownReport({
-      roleName: bundle.interview.roleName,
-      language: bundle.interview.language,
-      companyName: bundle.interview.companyName,
-      candidateName: bundle.session.candidateName,
-      rubric: bundle.interview.rubric,
-      reportState: bundle.reportState,
-      transcript: messages,
-    });
-  const markdown =
-    bundle.report.finalMarkdown &&
-    hasLlmAssistanceSection(bundle.report.finalMarkdown)
-      ? bundle.report.finalMarkdown
-      : renderedMarkdown;
+  const assessment = getReportAssessment(
+    bundle.reportState,
+    bundle.interview.rubric,
+    bundle.interview.language,
+  );
+  const isEnglish = bundle.interview.language === "en";
+  const copy = isEnglish
+    ? {
+        title: "Report summary",
+        coverage: "Scored dimensions",
+        average: "Average score",
+        partial: " (scored dimensions only)",
+        risks: "Key risks",
+        noRisks: "No clear risks yet.",
+        moreRisks: "Show remaining risks",
+        followups: "Follow-up questions",
+        noFollowups: "No follow-up questions yet.",
+        moreFollowups: "Show remaining questions",
+        fullReport: "Full Markdown report",
+        conversation: "Original conversation",
+      }
+    : {
+        title: "报告摘要",
+        coverage: "已评分维度",
+        average: "平均分",
+        partial: "（仅已评分维度）",
+        risks: "主要风险",
+        noRisks: "暂无明确风险点。",
+        moreRisks: "展开其余风险",
+        followups: "建议追问",
+        noFollowups: "暂无建议复试问题。",
+        moreFollowups: "展开其余追问",
+        fullReport: "完整 Markdown 报告",
+        conversation: "原始对话",
+      };
+  const markdown = renderMarkdownReport({
+    roleName: bundle.interview.roleName,
+    language: bundle.interview.language,
+    companyName: bundle.interview.companyName,
+    candidateName: bundle.session.candidateName,
+    rubric: bundle.interview.rubric,
+    reportState: bundle.reportState,
+    transcript: messages,
+  });
 
   return (
     <main className="min-h-screen bg-background">
@@ -101,10 +168,14 @@ export default async function SessionDetailPage({ params }: PageProps) {
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">背景</p>
-                <p className="whitespace-pre-wrap">
-                  {bundle.interview.companyContext || "未填写"}
-                </p>
+                <details>
+                  <summary className="cursor-pointer text-muted-foreground">
+                    背景
+                  </summary>
+                  <p className="mt-2 whitespace-pre-wrap">
+                    {bundle.interview.companyContext || "未填写"}
+                  </p>
+                </details>
               </div>
               <div>
                 <p className="text-muted-foreground">候选人</p>
@@ -150,27 +221,31 @@ export default async function SessionDetailPage({ params }: PageProps) {
           </Card>
 
           <Card className="rounded-lg shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">评分</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {bundle.interview.rubric.map((dimension) => {
-                const score = bundle.reportState.scores[dimension.id];
-                return (
-                  <div key={dimension.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">{dimension.name}</p>
-                      <Badge variant="outline">{score?.score ?? "N/A"}</Badge>
-                    </div>
-                    <Progress value={(score?.score ?? 0) * 10} />
-                    <div className="text-muted-foreground text-xs">
-                      {(score?.evidence ?? []).slice(0, 2).map((item) => (
-                        <p key={item}>- {item}</p>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+            <CardContent>
+              <details>
+                <summary className="cursor-pointer font-medium text-base">
+                  评分明细（{assessment.scoredDimensions} / {assessment.totalDimensions}）
+                </summary>
+                <div className="mt-4 space-y-4">
+                  {bundle.interview.rubric.map((dimension) => {
+                    const score = bundle.reportState.scores[dimension.id];
+                    return (
+                      <div key={dimension.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-sm">{dimension.name}</p>
+                          <Badge variant="outline">{score?.score ?? "N/A"}</Badge>
+                        </div>
+                        <Progress value={(score?.score ?? 0) * 10} />
+                        <div className="text-muted-foreground text-xs">
+                          {(score?.evidence ?? []).slice(0, 2).map((item) => (
+                            <p key={item}>- {item}</p>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
             </CardContent>
           </Card>
         </aside>
@@ -178,38 +253,72 @@ export default async function SessionDetailPage({ params }: PageProps) {
         <section className="space-y-4">
           <Card className="rounded-lg shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">完整对话</CardTitle>
+              <CardTitle className="text-base">{copy.title}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[420px] rounded-lg border bg-card p-4">
-                <div className="space-y-4">
-                  {messages.length ? (
-                    messages.map((message) => (
-                      <div key={message.id} className="space-y-1">
-                        <Badge variant={message.role === "user" ? "secondary" : "outline"}>
-                          {message.role === "user" ? "候选人" : "面试官"}
-                        </Badge>
-                        <p className="whitespace-pre-wrap text-sm">
-                          {message.content}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-sm">暂无对话</p>
-                  )}
-                </div>
-              </ScrollArea>
+            <CardContent className="space-y-5 text-sm">
+              <p className="font-medium leading-6">{assessment.conclusion}</p>
+              <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                <Badge variant={assessment.complete ? "outline" : "secondary"}>
+                  {copy.coverage}：{assessment.scoredDimensions} / {assessment.totalDimensions}
+                </Badge>
+                <span>
+                  {copy.average}{assessment.complete ? "" : copy.partial}：
+                  {assessment.average === null ? "N/A" : assessment.average.toFixed(1)}
+                </span>
+              </div>
+              <SummaryList
+                title={copy.risks}
+                items={bundle.reportState.riskFlags}
+                empty={copy.noRisks}
+                more={copy.moreRisks}
+              />
+              <SummaryList
+                title={copy.followups}
+                items={bundle.reportState.recommendedFollowups}
+                empty={copy.noFollowups}
+                more={copy.moreFollowups}
+              />
             </CardContent>
           </Card>
 
           <Card className="rounded-lg shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Markdown 报告预览</CardTitle>
-            </CardHeader>
             <CardContent>
-              <pre className="max-h-[620px] overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/40 p-4 text-sm leading-6">
-                {markdown}
-              </pre>
+              <details>
+                <summary className="cursor-pointer font-medium text-base">
+                  {copy.fullReport}
+                </summary>
+                <pre className="mt-4 max-h-[620px] overflow-auto whitespace-pre-wrap rounded-lg border bg-muted/40 p-4 text-sm leading-6">
+                  {markdown}
+                </pre>
+              </details>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-lg shadow-sm">
+            <CardContent>
+              <details>
+                <summary className="cursor-pointer font-medium text-base">
+                  {copy.conversation}（{messages.length}）
+                </summary>
+                <ScrollArea className="mt-4 h-[420px] rounded-lg border bg-card p-4">
+                  <div className="space-y-4">
+                    {messages.length ? (
+                      messages.map((message) => (
+                        <div key={message.id} className="space-y-1">
+                          <Badge variant={message.role === "user" ? "secondary" : "outline"}>
+                            {message.role === "user" ? "候选人" : "面试官"}
+                          </Badge>
+                          <p className="whitespace-pre-wrap text-sm">
+                            {message.content}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-sm">暂无对话</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </details>
             </CardContent>
           </Card>
 
