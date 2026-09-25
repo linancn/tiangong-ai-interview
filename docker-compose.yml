@@ -30,6 +30,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: 0.0.0.0
+      ADMIN_COOKIE_SECURE: "true"
       DATABASE_URL: postgres://tiangong:tiangong_password@postgres:5432/tiangong_interview
     ports:
       - "3001:3001"
